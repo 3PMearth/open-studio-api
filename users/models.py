@@ -1,4 +1,5 @@
 from django.db import models
+from utils.common import upload_file_to_s3
 
 # Create your models here.
 
@@ -16,6 +17,10 @@ class User(models.Model):
                                     null=True, blank=True)
     sso_type = models.CharField(max_length=16, verbose_name="SSO 타입")
     slug = models.CharField(max_length=32, verbose_name="슬러그", null=True, blank=True)
+
+    info = models.TextField(verbose_name="추가정보", null=True, blank=True)
+    profile_img = models.ImageField(upload_to=upload_file_to_s3,
+                                    null=True, blank=True, verbose_name="프로필 이미지")
 
     def __str__(self):
         return f"[{self.id}] {self.email}"

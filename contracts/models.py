@@ -34,12 +34,11 @@ class Transaction(models.Model):
     contract = models.ForeignKey(Contract, on_delete=models.CASCADE,
                                  related_name='transactions', verbose_name="컨트랙트")
     tx_hash = models.CharField(max_length=128, verbose_name="트랜잭션 해시")
-    from_address = models.CharField(max_length=128, verbose_name="보내는 주소(서명주체)")
     to_address = models.CharField(max_length=128, verbose_name="받는 주소", null=True, blank=True)
     amount = models.IntegerField(verbose_name="수량", null=True, blank=True)
     gas_used = models.IntegerField(verbose_name="사용된 가스", null=True, blank=True)
     gas_price = models.IntegerField(verbose_name="가스 가격(gwei)", null=True, blank=True)
-    status = models.IntegerField(verbose_name="상태", null=True, blank=True)
+    func = models.IntegerField(verbose_name="Function명", null=True, blank=True)
     nonce = models.IntegerField(verbose_name="nonce", default=0)
 
     created_at = models.DateTimeField(auto_now_add=True)

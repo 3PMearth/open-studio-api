@@ -70,3 +70,53 @@ def user_create_view(request):
                          'user': serializer.data}, status=status.HTTP_201_CREATED)
     else:
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@swagger_auto_schema(
+    method='PATCH',
+    request_body=UserSerializer,
+    responses={201: UserSerializer,
+               400: "Bad Request"}
+)
+@api_view(['PATCH', 'GET'])
+@permission_classes([HasAPIKey])
+def user_modify_view(request, user_id):
+    """
+    User Modification and Get user detail
+    ---
+    """
+    user = User.objects.filter(id=user_id).first()
+    if user is None:
+        return Response({'message': 'not found user'}, status=status.HTTP_404_NOT_FOUND)
+    else:
+        if request.method == 'PATCH':
+            serializer = UserSerializer(user, data=request.data, partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                return Response({'message': 'successfully modified user',
+                                 'user': serializer.data}, status=status.HTTP_200_OK)
+            else:
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        elif request.method == 'GET':
+            serializer = UserSerializer(user)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@swagger_auto_schema(
+    method='GET',
+    responses={201: UserSerializer,
+               400: "Bad Request"}
+)
+@api_view(['GET'])
+@permission_classes([HasAPIKey])
+def user_detail_view_by_slug(request, user_slug):
+    """tb_tokens_assets
+    Get user detail by user slug
+    ---
+    """
+    user = User.objects.filter(slug=user_slug).first()
+    if user is None:
+        return Response({'message': 'not found user'}, status=status.HTTP_404_NOT_FOUND)
+    else:
+        serializer = UserSerializer(user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+

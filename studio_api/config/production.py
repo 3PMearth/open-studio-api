@@ -44,3 +44,5 @@ LOGGING = {
     }
 }
 
+PAYAPP_WEBHOOK_URL="https://api-studio-dev.3pm.link/payments/webhook"
+

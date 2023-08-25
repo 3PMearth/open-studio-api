@@ -99,3 +99,4 @@ web3==5.17.0
 websocket-client==0.59.0
 websockets==8.1
 yarl==1.9.2
+nested-multipart-parser==1.5.0
