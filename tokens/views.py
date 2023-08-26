@@ -24,13 +24,15 @@ logger = logging.getLogger(__name__)
 @permission_classes([HasAPIKey])
 def token_create_view(request):
     """
-    Token Create
+    Token Create (Minting Token))
     ---
     """
     serializer = TokenSerializer(data=request.data)
     if serializer.is_valid():
-        serializer.save()
-        # todo : mint token
+        token_instance = serializer.save()
+        #run celery task, mint_token on blockchain
+        task = mint_token.delay(token_instance.id)
+        logger.info("celery task id : {}, token id : {}".format(task.id, token_instance.id))
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     logger.info("token data : %s" % request.data)
     logger.info("token_create_view: serializer.errors: %s" % serializer.errors)
@@ -81,9 +83,6 @@ def token_update_get_view(request, token_id):
             return Response({'status': 'not found'}, status=status.HTTP_404_NOT_FOUND)
         else:
             serializer = TokenSerializer(token, many=False)
-            #run celery task, mint_token on blockchain
-            task = mint_token.delay(token.id)
-            logger.info("celery task id : %s" % task.id)
             return Response(serializer.data, status=status.HTTP_200_OK)
     else:
         return Response({'message': 'Bad Request'}, status=status.HTTP_400_BAD_REQUEST)

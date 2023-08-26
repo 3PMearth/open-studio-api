@@ -11,7 +11,7 @@ class Token(models.Model):
     class TokenStatusChoice(models.TextChoices):
         PREPARE = 'PREPARE', 'DB만 저장'
         MINTED = 'MINTED', '실제 minting됨'
-        ERROR = 'ERROR', 'minting error'
+        ERROR = 'ERROR', 'Error'
         BURN = 'BURN', 'burn 됨'
         CANCEL = 'CANCEL', '취소됨'
 

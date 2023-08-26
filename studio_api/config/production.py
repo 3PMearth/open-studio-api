@@ -28,21 +28,12 @@ LOGGING = {
         'console': {
             'level': 'INFO',
             'class': 'logging.StreamHandler',
-        },
-        'logfile': {
-            'level': 'INFO',
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': "/var/log/app-logs/django.log",
-            'formatter': 'standard',
-        },
+        }
     },
     'loggers': {
         '': {
-            'handlers': ['console', 'logfile'],
+            'handlers': ['console'],
             'level': 'INFO',
         },
     }
 }
-
-PAYAPP_WEBHOOK_URL="https://api-studio-dev.3pm.link/payments/webhook"
-
