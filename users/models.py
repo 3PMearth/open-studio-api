@@ -22,6 +22,9 @@ class User(models.Model):
     profile_img = models.ImageField(upload_to=upload_file_to_s3,
                                     null=True, blank=True, verbose_name="프로필 이미지")
 
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
     def __str__(self):
         return f"[{self.id}] {self.email}"
 

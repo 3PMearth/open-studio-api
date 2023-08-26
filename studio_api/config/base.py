@@ -64,6 +64,7 @@ INSTALLED_APPS = [
     "tokens.apps.TokensConfig",
     "contracts.apps.ContractsConfig",
     "payments.apps.PaymentsConfig",
+    "orders.apps.OrdersConfig",
 ]
 
 MIDDLEWARE = [

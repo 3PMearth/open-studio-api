@@ -23,7 +23,7 @@ class Command(BaseCommand):
         contract_address = token.contract.contract_address
         web3 = Web3(Web3.HTTPProvider(settings.WEB3_PROVIDER_URL))
         abi = get_contract_abi()
-        target_address = web3.toChecksumAddress(target_address)
+        target_address = web3.to_checksum_address(target_address)
         contract_instance = web3.eth.contract(address=contract_address, abi=abi)
         balance = contract_instance.functions.balanceOf(target_address, nft_id).call()
         self.stdout.write(self.style.SUCCESS('balance {}, wallet : {}'.format(balance, target_address)))

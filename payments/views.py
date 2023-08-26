@@ -1,17 +1,17 @@
 import logging
-import time
 from django.http import HttpResponseRedirect
-from rest_framework import status, viewsets
-from rest_framework.decorators import api_view, permission_classes, parser_classes
+from rest_framework import status
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework_api_key.permissions import HasAPIKey
 from rest_framework.response import Response
 from drf_yasg.utils import swagger_auto_schema
-from drf_yasg import openapi
 from tokens.models import Token
+from datetime import datetime
 from users.models import User
+from orders.models import Order, OrderToken
 from .serializers import PGDataSerializer
 from nested_multipart_parser import NestedParser
-from rest_framework.parsers import MultiPartParser
+from uuid import uuid4
 
 logger = logging.getLogger(__name__)
 
@@ -60,7 +60,7 @@ def request_payment(request):
             logger.info("sum_amount is not equal to sum of amount")
             logger.info("sum_amount: {}, sum_price: {}".format(sum_amount, sum_price))
             logger.info("cal_sum_amount: {}, cal_sum_price: {}".format(cal_sum_amount, cal_sum_price))
-            error_redirect_url = "{}?error_message=\'sum_amount/sum_price is mismatched\'".format(validate_data['error_url'], "invalid_data")
+            error_redirect_url = "{}?error_message=\'sum_amount/sum_price is mismatched\'".format(validate_data['error_url'])
             return HttpResponseRedirect(error_redirect_url)
 
         #  check the user is existed
@@ -69,12 +69,58 @@ def request_payment(request):
             user = User.objects.get(pk=user_id)
         except User.DoesNotExist:
             logger.info("user does not exist, user_id : {}".format(user_id))
-            error_redirect_url = "{}?error_message=\'user does not exist\'".format(validate_data['error_url'], "invalid_data")
+            error_redirect_url = "{}?error_message=\'user does not exist\'".format(validate_data['error_url'])
             return HttpResponseRedirect(error_redirect_url)
-        # update country_code, phone_number
-        user.country_code = validate_data['country_code']
-        user.phone_number = validate_data['phone_number']
-        user.save()
+
+        country_code = validate_data['country_code']
+        phone_number = validate_data['phone_number']
+
+        # check stock of tokens
+        for token in validate_data['tokens']:
+            token_id = token['token_id']
+            amount = int(token['amount'])
+            try:
+                token = Token.objects.get(pk=token_id)
+            except Token.DoesNotExist:
+                logger.info("token does not exist, token_id : {}".format(token_id))
+                error_redirect_url = "{}?error_message=\'token does not exist\'".format(validate_data['error_url'])
+                return HttpResponseRedirect(error_redirect_url)
+
+            if token.stock < amount:
+                logger.info("token stock is not enough, token_id : {}".format(token_id))
+                error_redirect_url = "{}?error_message=\'token stock is not enough\'".format(validate_data['error_url'])
+                return HttpResponseRedirect(error_redirect_url)
+
+        # create new order
+        order_number = datetime.now().strftime('%Y%m%d%H%M') + str(uuid4())[:5]
+        new_order = Order(
+            buyer=user,
+            order_number=order_number,
+            country_code=country_code,
+            phone_number=phone_number,
+            currency=currency,
+            sum_amount=sum_amount,
+            sum_price=sum_price,
+            order_status='created',
+        )
+        new_order.save()
+
+        for token in validate_data['tokens']:
+            token_id = token['token_id']
+            amount = token['amount']
+            token = Token.objects.get(pk=token_id)
+            if currency == 'krw':
+                price = float(token.price_krw)
+            else:
+                price = float(token.price_usd)
+            new_order_token = OrderToken(
+                    order=new_order,
+                    token=token,
+                    amount=amount,
+                    price=price,
+                    currency=currency
+            )
+            new_order_token.save()
 
 
         # todo :  Call PG API here ### not implemented yet

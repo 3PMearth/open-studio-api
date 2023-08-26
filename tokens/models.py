@@ -1,8 +1,5 @@
 from django.db import models
 from utils.common import upload_file_to_s3
-from users.models import User
-from django.conf import settings
-from contracts.models import Contract
 
 class Token(models.Model):
     """
@@ -20,9 +17,9 @@ class Token(models.Model):
                                     null=True, blank=True, verbose_name="토큰 이미지")
     animation = models.FileField(upload_to=upload_file_to_s3,
                                     null=True, blank=True, verbose_name="애니메이션")
-    contract = models.ForeignKey(Contract, related_name='contract', on_delete=models.CASCADE,
+    contract = models.ForeignKey("contracts.Contract", related_name='contract', on_delete=models.CASCADE,
                                     verbose_name="컨트랙트")
-    user = models.ForeignKey(User, on_delete=models.CASCADE,
+    user = models.ForeignKey("users.User", on_delete=models.CASCADE,
                              related_name='user', verbose_name="사용자(creator)")
     nft_id = models.IntegerField(verbose_name="NFT ID", null=True, blank=True)
     stock = models.IntegerField(verbose_name="재고(amount)", default=1)
@@ -44,7 +41,6 @@ class Token(models.Model):
         verbose_name_plural = "토큰"
 
 
-
 class Asset(models.Model):
     class AssetTypeChoice(models.TextChoices):
         IMAGE = 'image', 'image'
@@ -58,7 +54,7 @@ class Asset(models.Model):
                             verbose_name="에셋타입")
     media = models.FileField(upload_to=upload_file_to_s3, verbose_name="에셋 실제파일")
     download = models.BooleanField(default=False, verbose_name="다운로드 가능여부")
-    token = models.ForeignKey(Token, on_delete=models.CASCADE,
+    token = models.ForeignKey("tokens.Token", on_delete=models.CASCADE,
                               related_name='assets', null=True, blank=True,
                               verbose_name="토큰")
 
