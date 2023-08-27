@@ -60,10 +60,3 @@ class OrderToken(models.Model):
     class Meta:
         verbose_name = "주문 토큰 상세"
         verbose_name_plural = "주문 토큰 상세"
-
-
-
-
-
-
-

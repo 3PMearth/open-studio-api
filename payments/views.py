@@ -15,6 +15,7 @@ from uuid import uuid4
 
 logger = logging.getLogger(__name__)
 
+
 @swagger_auto_schema(
     method='POST',
     request_body=PGDataSerializer,
@@ -31,7 +32,7 @@ def request_payment(request):
     parser = NestedParser(data=request.data)
     if not parser.is_valid():
         logger.info("error : {}".format(parser.errors))
-        #redirect to error page
+        # redirect to error page
         error_redirect_url = "{}?error_message=\'{}\'".format(request.data.get('error_url'), "invalid_data")
         return HttpResponseRedirect(error_redirect_url)
     else:
@@ -60,7 +61,8 @@ def request_payment(request):
             logger.info("sum_amount is not equal to sum of amount")
             logger.info("sum_amount: {}, sum_price: {}".format(sum_amount, sum_price))
             logger.info("cal_sum_amount: {}, cal_sum_price: {}".format(cal_sum_amount, cal_sum_price))
-            error_redirect_url = "{}?error_message=\'sum_amount/sum_price is mismatched\'".format(validate_data['error_url'])
+            error_redirect_url = "{}?error_message=\'sum_amount/sum_price is mismatched\'".format(
+                validate_data['error_url'])
             return HttpResponseRedirect(error_redirect_url)
 
         #  check the user is existed
@@ -114,14 +116,13 @@ def request_payment(request):
             else:
                 price = float(token.price_usd)
             new_order_token = OrderToken(
-                    order=new_order,
-                    token=token,
-                    amount=amount,
-                    price=price,
-                    currency=currency
+                order=new_order,
+                token=token,
+                amount=amount,
+                price=price,
+                currency=currency
             )
             new_order_token.save()
-
 
         # todo :  Call PG API here ### not implemented yet
         ##########################################
@@ -129,7 +130,6 @@ def request_payment(request):
         # if success, redirect to success_url
         success_redirect_url = "{}?success_message=\'{}\'".format(request.data.get('success_url'), "success")
         return HttpResponseRedirect(success_redirect_url)
-
 
 
 @api_view(['POST'])
