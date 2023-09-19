@@ -85,19 +85,6 @@ ROOT_URLCONF = "studio_api.urls"
 
 SITE_ID = 1
 
-REST_USE_JWT = True
-
-SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(days=7),
-    'ROTATE_REFRESH_TOKENS': True,
-    'BLACKLIST_AFTER_ROTATION': True,
-    'UPDATE_LAST_LOGIN': True,
-
-    'AUTH_HEADER_TYPES': ('Bearer','JWT'),
-    'USER_ID_FIELD': 'id',
-    'USER_ID_CLAIM': 'user_id',
-}
-
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
@@ -133,9 +120,6 @@ DATABASES = {
 
 REST_FRAMEWORK = {
     'DEFAULT_VERSIONING_CLASS': 'rest_framework.versioning.NamespaceVersioning',
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework_api_key.permissions.HasAPIKey'
-    ],
 }
 
 # Password validation
@@ -177,8 +161,6 @@ SECURE_CROSS_ORIGIN_OPENER_POLICY=None
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
-STATIC_URL = "static/"
-
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
@@ -204,22 +186,6 @@ AWS_S3_OBJECT_PARAMETERS = {
     'CacheControl': 'max-age=86400',
 }
 AWS_DEFAULT_ACL = 'public-read'
-
-CELERY_BROKER_URL = 'sqs://{}:{}@'.format(AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY)
-BROKER_TRANSPORT_OPTIONS = {
-    'region': AWS_REGION,
-    'polling_interval': 20,
-    'visibility_timeout': 3600,  # 1 hour
-    'fifo_queues': True,
-    'queue_name_prefix': 'dev-',
-    'broker_connection_timeout': 30,
-}
-CELERY_DEFAULT_QUEUE = "sqs"
-CELERY_ACCEPT_CONTENT = ["application/json"]
-CELERY_TASK_SERIALIZER = "json"
-CELERY_RESULT_SERIALIZER = "json"
-CELERY_BROKER_TRANSPORT_OPTIONS = BROKER_TRANSPORT_OPTIONS
-CELERY_TASK_DEFAULT_QUEUE = "sqs"
 
 WEB3_PROVIDER_URL = config('WEB3_PROVIDER_URL')
 PROXY_ADDRESS = config('PROXY_ADDRESS')

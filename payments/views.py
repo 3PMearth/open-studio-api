@@ -1,5 +1,6 @@
 import logging
 from django.http import HttpResponseRedirect
+from drf_yasg import openapi
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework_api_key.permissions import HasAPIKey
@@ -19,6 +20,30 @@ logger = logging.getLogger(__name__)
 @swagger_auto_schema(
     method='POST',
     request_body=PGDataSerializer,
+    responses={
+        status.HTTP_200_OK: openapi.Response(
+            description='Successful response',
+            schema=openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    'message': openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description='success'
+                    )
+                })
+        ),
+        status.HTTP_400_BAD_REQUEST: openapi.Response(
+            description='Bad Request',
+            schema=openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    'message': openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description='error message'
+                    )
+                })
+        ),
+    }
 )
 @api_view(['POST'])
 @permission_classes([HasAPIKey])
@@ -34,7 +59,8 @@ def request_payment(request):
         logger.info("error : {}".format(parser.errors))
         # redirect to error page
         error_redirect_url = "{}?error_message=\'{}\'".format(request.data.get('error_url'), "invalid_data")
-        return HttpResponseRedirect(error_redirect_url)
+        #return HttpResponseRedirect(error_redirect_url)
+        return Response({'message': 'invalid_data'}, status=status.HTTP_400_BAD_REQUEST)
     else:
         validate_data = parser.validate_data
         payment_serializer = PGDataSerializer(data=validate_data)
@@ -42,7 +68,8 @@ def request_payment(request):
             logger.info("error : {}".format(payment_serializer.errors))
             # redirect to error page
             error_redirect_url = "{}?error_message=\'{}\'".format(validate_data['error_url'], "invalid_data")
-            return HttpResponseRedirect(error_redirect_url)
+            #return HttpResponseRedirect(error_redirect_url)
+            return Response({'message': 'invalid_data'}, status=status.HTTP_400_BAD_REQUEST)
 
         sum_amount = int(validate_data['sum_amount'])
         sum_price = float(validate_data['sum_price'])
@@ -63,7 +90,8 @@ def request_payment(request):
             logger.info("cal_sum_amount: {}, cal_sum_price: {}".format(cal_sum_amount, cal_sum_price))
             error_redirect_url = "{}?error_message=\'sum_amount/sum_price is mismatched\'".format(
                 validate_data['error_url'])
-            return HttpResponseRedirect(error_redirect_url)
+            #return HttpResponseRedirect(error_redirect_url)
+            return Response({'message': 'sum_amount/sum_price is mismatched'}, status=status.HTTP_400_BAD_REQUEST)
 
         #  check the user is existed
         user_id = validate_data['user_id']
@@ -72,7 +100,8 @@ def request_payment(request):
         except User.DoesNotExist:
             logger.info("user does not exist, user_id : {}".format(user_id))
             error_redirect_url = "{}?error_message=\'user does not exist\'".format(validate_data['error_url'])
-            return HttpResponseRedirect(error_redirect_url)
+            #return HttpResponseRedirect(error_redirect_url)
+            return Response({'message': 'user does not exist'}, status=status.HTTP_400_BAD_REQUEST)
 
         country_code = validate_data['country_code']
         phone_number = validate_data['phone_number']
@@ -86,12 +115,14 @@ def request_payment(request):
             except Token.DoesNotExist:
                 logger.info("token does not exist, token_id : {}".format(token_id))
                 error_redirect_url = "{}?error_message=\'token does not exist\'".format(validate_data['error_url'])
-                return HttpResponseRedirect(error_redirect_url)
+                #return HttpResponseRedirect(error_redirect_url)
+                return Response({'message': 'token does not exist'}, status=status.HTTP_400_BAD_REQUEST)
 
             if token.stock < amount:
                 logger.info("token stock is not enough, token_id : {}".format(token_id))
                 error_redirect_url = "{}?error_message=\'token stock is not enough\'".format(validate_data['error_url'])
-                return HttpResponseRedirect(error_redirect_url)
+                #return HttpResponseRedirect(error_redirect_url)
+                return Response({'message': 'token stock is not enough'}, status=status.HTTP_400_BAD_REQUEST)
 
         # create new order
         order_number = datetime.now().strftime('%Y%m%d%H%M') + str(uuid4())[:5]
@@ -127,9 +158,12 @@ def request_payment(request):
         # todo :  Call PG API here ### not implemented yet
         ##########################################
 
+        # todo : transfer token
+
         # if success, redirect to success_url
         success_redirect_url = "{}?success_message=\'{}\'".format(request.data.get('success_url'), "success")
-        return HttpResponseRedirect(success_redirect_url)
+        #return HttpResponseRedirect(success_redirect_url)
+        return Response({'message': 'success'}, status=status.HTTP_200_OK)
 
 
 @api_view(['POST'])

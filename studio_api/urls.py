@@ -42,6 +42,7 @@ urlpatterns = [
     path("v1/tokens/", include("tokens.urls")),
     path("v1/contracts/", include("contracts.urls")),
     path("v1/payments/", include("payments.urls")),
+    path("v1/orders/", include("orders.urls")),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
 if settings.DEBUG:

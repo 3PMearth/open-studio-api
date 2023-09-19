@@ -43,9 +43,14 @@ def transfer_token(token_id_list, to_address, amount_list):
         # transfer token here
         transaction = Transaction.objects.order_by('-id').first()
         if transaction is None:
-            nonce = web3.eth.get_transaction_count(settings.PROXY_ADDRESS)
+            nonce_onchain = web3.eth.get_transaction_count(settings.PROXY_ADDRESS)
+            nonce = nonce_onchain
         else:
-            nonce = transaction.nonce + 1
+            nonce_onchain = web3.eth.get_transaction_count(settings.PROXY_ADDRESS)
+            nonce_db = transaction.nonce + 1
+            logger.info("transfer_token celery task: nonce_onchain: {} nonce_db: {}".format(nonce_onchain, nonce_db))
+            # check nonce value in case of missing db transaction data
+            nonce = nonce_onchain if nonce_onchain > nonce_db else nonce_db
 
         logger.info("transfer_token celery task: nonce: {} gas:price : {}".format(nonce, gas_price))
         contract_address = token.contract.contract_address
@@ -76,9 +81,22 @@ def transfer_token(token_id_list, to_address, amount_list):
         tx = web3.eth.send_raw_transaction(signed_txn.rawTransaction)
         tx_hash = tx.hex()
         logger.info("mint_token celery task: tx_hash: %s" % tx_hash)
-
         tx_received = False
         tx_receipt = None
+
+        # save transaction
+        transaction = Transaction(contract=token.contract,
+                                  tx_hash=tx_hash,
+                                  to_address=to_address,
+                                  amount=tokenid_and_amount[1],
+                                  token=token,
+                                  gas_price=float(gas_price/1000000000),
+                                  func="safeTransferFrom",
+                                  nonce=nonce)
+        logger.info("transaction dict : {}".format(transaction.__dict__))
+        logger.info("save transaction: %s" % transaction)
+        transaction.save()
+
         try:
             tx_receipt = web3.eth.wait_for_transaction_receipt(tx, timeout=300)
             tx_received = True
@@ -94,17 +112,9 @@ def transfer_token(token_id_list, to_address, amount_list):
             tx_status = tx_receipt['status']
             gas_used = tx_receipt['gasUsed']
 
-        # save transaction
-        transaction = Transaction(contract=token.contract,
-                                  tx_hash=tx_hash,
-                                  to_address=to_address,
-                                  amount=tokenid_and_amount[1],
-                                  token=token,
-                                  gas_used=gas_used,
-                                  gas_price=gas_price,
-                                  func="safeTransferFrom",
-                                  nonce=nonce)
-        logger.info("save transaction: %s" % transaction)
+        # update transaction table
+        transaction.tx_status = tx_status
+        transaction.gas_used = gas_used
         transaction.save()
 
         if tx_status == 1:
@@ -139,10 +149,17 @@ def mint_token(token_id):
         logger.info("mint_token celery task: Transaction.objects.filter error: %s" % e)
         transaction = None
 
+    transaction = Transaction.objects.order_by('-id').first()
     if transaction is None:
-        nonce = web3.eth.get_transaction_count(proxy_address)
+        nonce_onchain = web3.eth.get_transaction_count(settings.PROXY_ADDRESS)
+        nonce = nonce_onchain
     else:
-        nonce = transaction.nonce + 1
+        nonce_onchain = web3.eth.get_transaction_count(settings.PROXY_ADDRESS)
+        nonce_db = transaction.nonce + 1
+        logger.info("transfer_token celery task: nonce_onchain: {} nonce_db: {}".format(nonce_onchain, nonce_db))
+        # check nonce value in case of missing db transaction data
+        nonce = nonce_onchain if nonce_onchain > nonce_db else nonce_db
+
     logger.info("mint_token celery task: nonce: %s" % nonce)
 
     # # get gas price and make it little bit higher
@@ -168,6 +185,20 @@ def mint_token(token_id):
     logger.info("mint_token celery task: tx_hash: %s" % tx_hash)
     tx_received = False
     tx_receipt = None
+    # save to transaction table
+    # save transaction
+    transaction = Transaction(contract=token.contract,
+                              tx_hash=tx_hash,
+                              to_address=creator_address,
+                              amount=amount,
+                              token=token,
+                              gas_price=float(gas_price/1000000000),
+                              func="mintMultiToken",
+                              nonce=nonce)
+    logger.info("transaction dict : {}".format(transaction.__dict__))
+    logger.info("save transaction: %s" % transaction)
+    transaction.save()
+
     try:
         tx_receipt = web3.eth.wait_for_transaction_receipt(tx, timeout=300)
         tx_received = True
@@ -183,18 +214,11 @@ def mint_token(token_id):
         tx_status = tx_receipt['status']
         gas_used = tx_receipt['gasUsed']
 
-    # save transaction
-    transaction = Transaction(contract=token.contract,
-                              tx_hash=tx_hash,
-                              to_address=creator_address,
-                              amount=amount,
-                              token=token,
-                              gas_used=gas_used,
-                              gas_price=gas_price,
-                              func="mintMultiToken",
-                              nonce=nonce)
-    logger.info("save transaction: %s" % transaction)
+    # update transaction table
+    transaction.tx_status = tx_status
+    transaction.gas_used = gas_used
     transaction.save()
+
     # check is status is 1, otherwise it is error
     if tx_status != 1:
         token.status = 'ERROR'

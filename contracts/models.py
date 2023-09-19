@@ -36,8 +36,7 @@ class Transaction(models.Model):
     token = models.ForeignKey("tokens.Token", on_delete=models.CASCADE,
                                 related_name='transactions', verbose_name="토큰",
                                 null=True, blank=True)
-    # order and transaction is Not 1:1 relationship, because one order can have multiple transactions
-    # e.g., some of tx can be failed (reverted), then we need to retry to send new tx
+    # 1:n relationship (order:transactions), because of safeTransferFrom function
     order = models.ForeignKey("orders.Order", on_delete=models.CASCADE,
                               related_name='transactions', verbose_name="주문",
                               null=True, blank=True)
@@ -45,9 +44,11 @@ class Transaction(models.Model):
     to_address = models.CharField(max_length=128, verbose_name="받는 주소", null=True, blank=True)
     amount = models.IntegerField(verbose_name="수량", null=True, blank=True)
     gas_used = models.IntegerField(verbose_name="사용된 가스", null=True, blank=True)
-    gas_price = models.IntegerField(verbose_name="가스 가격(gwei)", null=True, blank=True)
-    func = models.CharField(verbose_name="Function명", null=True, blank=True)
+    gas_price = models.FloatField(verbose_name="가스 가격(gwei)", null=True, blank=True)
+    func = models.CharField(verbose_name="Function", null=True, blank=True)
     nonce = models.IntegerField(verbose_name="nonce", default=0)
+    tx_status = models.CharField(max_length=16, verbose_name="트랜잭션 상태",
+                                 null=True, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

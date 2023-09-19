@@ -6,7 +6,7 @@ class ContractAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'symbol', 'contract_address', 'created_at')
 
 class TransactionAdmin(admin.ModelAdmin):
-    list_display = ('id', 'contract', 'tx_hash', 'to_address', 'gas_price', 'func', 'created_at')
+    list_display = ('id', 'contract', 'tx_hash', 'func', 'nonce', 'created_at')
 
 
 admin.site.register(Contract, ContractAdmin)

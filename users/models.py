@@ -15,6 +15,8 @@ class User(models.Model):
                                     null=True, blank=True)
     last_name = models.CharField(max_length=64, verbose_name="성",
                                     null=True, blank=True)
+    username = models.CharField(max_length=64, verbose_name="유저닉네임",
+                                    null=True, blank=True)
     sso_type = models.CharField(max_length=16, verbose_name="SSO 타입")
     slug = models.CharField(max_length=32, verbose_name="슬러그", null=True, blank=True)
 

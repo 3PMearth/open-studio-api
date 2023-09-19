@@ -58,7 +58,11 @@ def token_list_view_by_user(request, user_id):
         serializer = TokenSerializer(tokens, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-
+@swagger_auto_schema(
+    methods=['GET', 'PATCH'],
+    responses={200: TokenSerializer,
+               404: "해당하는 데이터가 없을 경우"}
+)
 @api_view(['PATCH', 'GET'])
 @permission_classes([HasAPIKey])
 def token_update_get_view(request, token_id):
