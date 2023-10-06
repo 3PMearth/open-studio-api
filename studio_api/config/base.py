@@ -65,6 +65,7 @@ INSTALLED_APPS = [
     "contracts.apps.ContractsConfig",
     "payments.apps.PaymentsConfig",
     "orders.apps.OrdersConfig",
+    "redeems.apps.RedeemsConfig",
 ]
 
 MIDDLEWARE = [
@@ -193,5 +194,6 @@ PROXY_PRIVATE_KEY = config('PROXY_PRIVATE_KEY')
 
 PAYAPP_WEBHOOK_URL = config('PAYAPP_WEBHOOK_URL')
 
+SECRET_SHARED_TOKEN = config('SECRET_SHARED_TOKEN')
 
 
