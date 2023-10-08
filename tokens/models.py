@@ -17,7 +17,7 @@ class Token(models.Model):
                                     null=True, blank=True, verbose_name="토큰 이미지")
     animation = models.FileField(upload_to=upload_file_to_s3,
                                     null=True, blank=True, verbose_name="애니메이션")
-    contract = models.ForeignKey("contracts.Contract", related_name='contract', on_delete=models.CASCADE,
+    contract = models.ForeignKey("contracts.Contract", related_name='tokens', on_delete=models.CASCADE,
                                     verbose_name="컨트랙트")
     user = models.ForeignKey("users.User", on_delete=models.CASCADE,
                              related_name='user', verbose_name="사용자(creator)")
