@@ -4,6 +4,7 @@ import logging
 from web3 import Web3
 from django.conf import settings
 from uuid import uuid4
+from Crypto.Hash import SHA256
 
 logger = logging.getLogger(__name__)
 
@@ -86,8 +87,9 @@ def validate_t2(nft_id, verifier_id, contract_address, user_wallet, verifier_cod
     secret_shared_token = settings.SECRET_SHARED_TOKEN
     data_to_sign = str(nft_id) + str(verifier_id) + \
                    contract_address.lower() + user_wallet.lower() + secret_shared_token + verifier_code
-    hash_obj = Web3.keccak(text=data_to_sign)
-    calculated_t2 = hash_obj.hex()
+    hash_obj = SHA256.new(data_to_sign.encode())
+    calculated_t2 = hash_obj.hexdigest()
+
     logger.info("data_to_sign: {}".format(data_to_sign))
     logger.info("calculated_t2: {}".format(calculated_t2))
     if calculated_t2 != T2:
